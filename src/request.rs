@@ -28,8 +28,20 @@ pub fn download(url: &str) -> Option<Vec<u8>> {
         ));
 
         if internet_handle.0.is_null() {
+            println!("[{}]Failed to open internet handle", url);
             return None;
         }
+
+        // if InternetSetCookieA(
+        //     PCSTR::from_raw(url_raw.as_ptr()),
+        //     PCSTR::from_raw("AVS".as_ptr()),
+        //     PCSTR::from_raw("".as_ptr()),
+        // )
+        // .is_err()
+        // {
+        //     println!("[{}]Failed to set cookie", url);
+        //     return None;
+        // }
 
         let connect_handle = InternetHandleWrapper(InternetOpenUrlA(
             internet_handle.0,
@@ -40,12 +52,13 @@ pub fn download(url: &str) -> Option<Vec<u8>> {
         ));
 
         if connect_handle.0.is_null() {
+            println!("[{}]Failed to open URL", url);
             return None;
         }
 
         let mut status_code: u32 = 0;
         let mut status_code_size = std::mem::size_of_val(&status_code) as u32;
-        
+
         if HttpQueryInfoA(
             connect_handle.0,
             HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
@@ -55,10 +68,12 @@ pub fn download(url: &str) -> Option<Vec<u8>> {
         )
         .is_err()
         {
+            println!("[{}]Failed to query HTTP status code", url);
             return None;
         }
-        
+
         if status_code != 200 {
+            println!("[{}]HTTP error: {}", url, status_code);
             return None;
         }
 
@@ -74,6 +89,7 @@ pub fn download(url: &str) -> Option<Vec<u8>> {
             )
             .is_err()
             {
+                println!("[{}]Failed to read from URL", url);
                 return None;
             }
 
